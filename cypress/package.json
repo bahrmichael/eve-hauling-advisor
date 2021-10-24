@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "cypress run",
+    "test": "npx cypress run",
     "cypress:open": "cypress open"
   },
-  "dependencies": {
+  "devDependencies": {
     "cypress": "^8.6.0"
   }
 }
