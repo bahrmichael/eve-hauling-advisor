@@ -1,6 +1,6 @@
 describe('Multipliers', () => {
     it('Volume x thousand', () => {
-        cy.visit('https://young-bird-6gerc.cloud.serverless.com/')
+        cy.visit('');
 
         cy.get('[data-cy=volume-input]').type('10');
         cy.get('[data-cy=volume-thousand]').click();
@@ -8,7 +8,7 @@ describe('Multipliers', () => {
     });
 
     it('Volume x million', () => {
-        cy.visit('https://young-bird-6gerc.cloud.serverless.com/')
+        cy.visit('');
 
         cy.get('[data-cy=volume-input]').type('1');
         cy.get('[data-cy=volume-million]').click();
@@ -16,7 +16,7 @@ describe('Multipliers', () => {
     });
 
     it('Collateral x million', () => {
-        cy.visit('https://young-bird-6gerc.cloud.serverless.com/')
+        cy.visit('');
 
         cy.get('[data-cy=collateral-input]').type('300');
         cy.get('[data-cy=collateral-million]').click();
@@ -24,7 +24,7 @@ describe('Multipliers', () => {
     });
 
     it('Collateral x billion', () => {
-        cy.visit('https://young-bird-6gerc.cloud.serverless.com/')
+        cy.visit('');
 
         cy.get('[data-cy=collateral-input]').type('4');
         cy.get('[data-cy=collateral-billion]').click();
