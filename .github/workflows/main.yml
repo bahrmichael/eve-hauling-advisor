@@ -16,6 +16,7 @@ jobs:
         with:
           node-version: 16
       - run: yarn install --frozen-lockfile
+      - run: (cd frontend && yarn install --frozen-lockfile && yarn cloud)
 #      - run: npx cloud test
       - run: npx cloud deploy preview
   cypress-run:
