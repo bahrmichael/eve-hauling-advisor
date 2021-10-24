@@ -1,6 +1,6 @@
 describe('Prefilled URL', () => {
     it('With All Parameters', () => {
-        cy.visit('');
+        cy.visit('?destination=Jita&origin=Amarr&volume=10000&collateral=500000000');
 
         cy.get('[data-cy=origin-input]').should('have.value', 'Amarr');
         cy.get('[data-cy=destination-input]').should('have.value', 'Jita');
@@ -13,7 +13,7 @@ describe('Prefilled URL', () => {
     });
 
     it('With Partial Parameters', () => {
-        cy.visit('');
+        cy.visit('?destination=Jita&origin=Amarr');
 
         cy.get('[data-cy=origin-input]').should('have.value', 'Amarr');
         cy.get('[data-cy=destination-input]').should('have.value', 'Jita');
