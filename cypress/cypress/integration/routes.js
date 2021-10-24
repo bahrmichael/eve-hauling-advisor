@@ -1,6 +1,6 @@
 describe('Route Calculation', () => {
     it('Finds highsec route', () => {
-        cy.visit('https://young-bird-6gerc.cloud.serverless.com/')
+        cy.visit('');
 
         cy.get('[data-cy=origin-input]').type('Jita');
         cy.get('[data-cy=destination-input]').type('Ashab');
@@ -15,7 +15,7 @@ describe('Route Calculation', () => {
     });
 
     it('Finds lowsec route', () => {
-        cy.visit('https://young-bird-6gerc.cloud.serverless.com/')
+        cy.visit('');
 
         cy.get('[data-cy=origin-input]').type('Jita');
         cy.get('[data-cy=destination-input]').type('Chidah');
