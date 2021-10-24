@@ -20,6 +20,7 @@ jobs:
 #      - run: npx cloud test
       - run: npx cloud deploy preview
   cypress-run:
+    needs: deploy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -29,6 +30,7 @@ jobs:
       - name: Cypress run
         uses: cypress-io/github-action@v2
         with:
-          build: (cd cypress && npm run build)
-          start: (cd cypress && npm start)
+          project: ./cypress
+          build: npm run build
+          start: npm start
 
