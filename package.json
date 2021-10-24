@@ -1,0 +1,21 @@
+{
+  "name": "hauling-advisor",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "cloud",
+    "test": "cloud test"
+  },
+  "devDependencies": {
+    "@serverless/cloud": "^2.0.0",
+    "@types/jest": "^26.0.24"
+  },
+  "serverless": {
+    "org": "bahrdev",
+    "app": "hauling-advisor"
+  },
+  "dependencies": {
+    "axios": "^0.23.0"
+  }
+}
