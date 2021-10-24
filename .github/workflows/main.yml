@@ -38,7 +38,7 @@ jobs:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           # pass GitHub token to allow accurately detecting a build vs a re-run build
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  deploy-production:
+  promote-to-production:
     needs: cypress-run
     name: Deploy Production
     runs-on: ubuntu-latest
@@ -50,6 +50,4 @@ jobs:
         with:
           node-version: 16
       - run: yarn install --frozen-lockfile
-      - run: (cd frontend && yarn install --frozen-lockfile && yarn cloud)
-      #      - run: npx cloud test
-      - run: npx cloud deploy production
+      - run: npx cloud promote preview production
