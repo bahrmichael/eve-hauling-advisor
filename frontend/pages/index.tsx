@@ -45,7 +45,6 @@ const Home: NextPage = () => {
             <Head>
                 <title>EVE Hauling Advisor</title>
                 <link rel="icon" href="/favicon.ico"/>
-                <script src="https://ptarmigan.hsbb.space/script.js" data-site="KNJYOLFY" defer></script>
             </Head>
 
             <main className={styles.main}>
@@ -481,6 +480,13 @@ function Volume() {
             // don't accept input with more than 1 dot
             return;
         }
+        if (value.length === 0) {
+            setVolume('');
+            return;
+        }
+        if (value.length > 0 && value.match(/[0-9,.]/g)?.length !== value.length) {
+            return;
+        }
         const sanitized = +value.replaceAll(",", "");
         const newVolume = sanitized * factor;
         if (newVolume > 1_200_000) {
@@ -532,6 +538,13 @@ function Collateral() {
                 setCollateral(value);
             }
             // don't accept input with more than 1 dot
+            return;
+        }
+        if (value.length === 0) {
+            setCollateral('');
+            return;
+        }
+        if (value.length > 0 && value.match(/[0-9,.]/g)?.length !== value.length) {
             return;
         }
         const sanitized = +value.replaceAll(",", "");
