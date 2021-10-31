@@ -5,7 +5,7 @@ on:
       - main
 
 jobs:
-  deploy-preview:
+  preview-deploy:
     name: Deploy Preview
     runs-on: ubuntu-latest
     env:
@@ -19,9 +19,9 @@ jobs:
       - run: (cd frontend && yarn install --frozen-lockfile && yarn cloud)
 #      - run: npx cloud test
       - run: npx cloud deploy preview
-  cypress-run:
-    needs: deploy-preview
-    name: E2E Tests
+  preview-e2e:
+    needs: preview-deploy
+    name: E2E Tests Preview
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -38,8 +38,9 @@ jobs:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           # pass GitHub token to allow accurately detecting a build vs a re-run build
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  promote-to-production:
-    needs: cypress-run
+          CYPRESS_BASE_URL: 'https://polished-silence-swjqe.cloud.serverless.com'
+  production-deploy:
+    needs: preview-e2e
     name: Deploy Production
     runs-on: ubuntu-latest
     env:
@@ -51,3 +52,23 @@ jobs:
           node-version: 16
       - run: yarn install --frozen-lockfile
       - run: npx cloud promote preview production
+  production-e2e:
+    needs: production-deploy
+    name: E2E Tests Prod
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      # Install NPM dependencies, cache them correctly
+      # and run all Cypress tests
+      - name: Cypress run
+        uses: cypress-io/github-action@v2
+        with:
+          working-directory: ./cypress
+          record: true
+        env:
+          # pass the Dashboard record key as an environment variable
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          # pass GitHub token to allow accurately detecting a build vs a re-run build
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CYPRESS_BASE_URL: 'https://raspy-heart-silnh.cloud.serverless.com'

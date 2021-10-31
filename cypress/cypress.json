@@ -1,4 +1,5 @@
 {
-  "baseUrl": "https://polished-silence-swjqe.cloud.serverless.com",
-  "projectId": "31fv4m"
+  "baseUrl": "http://localhost:3000",
+  "projectId": "31fv4m",
+  "retries": 2
 }
