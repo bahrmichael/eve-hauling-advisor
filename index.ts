@@ -1,4 +1,4 @@
-import {api, data} from "@serverless/cloud";
+import {api, data, params} from "@serverless/cloud";
 import axios from 'axios';
 import systemNames from './system-names';
 
@@ -58,7 +58,23 @@ api.get("/api/route", async (req, res) => {
         });
     }
 
-    const providers = (await Promise.all(providerFunctions.map((provider) => provider(routeParams)))).flatMap(x => x);
+    let pf;
+    if (routeParams.providers) {
+        pf = routeParams.providers.split(',').map((p) => {
+            switch (p) {
+                case "redfrog": return getRedFrog;
+                case "purplefrog": return getPurpleFrog;
+                case "blackfrog": return getBlackFrog;
+                case "pushx": return getPushX;
+                case "ghsol": return getGhsol;
+                default: return null
+            }
+        }).filter((x) => x);
+    } else {
+        pf = providerFunctions;
+    }
+    const providers = (await Promise.all(pf.map((provider) => provider(routeParams)))).flatMap(x => x);
+
     let distances;
     try {
         const distances = await data.get(`distance:${routeParams.origin}:${routeParams.destination}:*`);
@@ -120,7 +136,11 @@ const providerDetails = {
     blackFrog: {
         provider: 'Black Frog Logistics',
         url: 'https://red-frog.org/black_calculator'
-    }
+    },
+    haulersChannel: {
+        provider: 'Haulers Channel',
+        url: 'https://forums.eveonline.com/t/haulers-channel'
+    },
 }
 
 type ProviderResult = RouteResult | RouteResult[] | RouteError;
@@ -130,6 +150,7 @@ interface RouteParameters {
     destination: string;
     volume: number;
     collateral: number;
+    providers?: string;
 }
 
 interface RouteResult {
@@ -276,6 +297,7 @@ async function getGhsol(params: RouteParameters): Promise<ProviderResult> {
         return returnExistingRecord(existingRecord);
     }
 
+    // todo: replace this with distance gates result
     const systemIds = ((await axios.post(`https://esi.evetech.net/latest/universe/ids/`, [params.origin, params.destination]))
         .data as any).systems.map((s) => s.id);
 
@@ -521,3 +543,161 @@ data.on("created:distance_job_gates:*", async (event) => {
     console.log({result});
     await data.set(`distance:${origin}:${destination}:gates`, result);
 });
+
+async function getHaulersChannel({origin, destination, volume, collateral}: RouteParameters): Promise<ProviderResult> {
+    const distance = await data.get(`distance:${origin}:${destination}:gates`);
+    console.log({distance});
+    if (!distance) {
+        await data.set(`distance_job_gates:${origin}:${destination}`, {
+            origin: origin,
+            destination: destination,
+        });
+        return [];
+    }
+
+    const isHighsecOnly = !distance['systemSecurities'].find((s) => s < 0.45);
+    const jumps = distance['systems'];
+
+    const rush = haulersChannelCalc(volume, jumps, collateral, true, isHighsecOnly);
+    const standard = haulersChannelCalc(volume, jumps, collateral, false, isHighsecOnly);
+
+    console.log({rush, standard});
+
+    const result = [];
+    if (typeof rush === 'string' || rush == null) {
+        result.push({
+            ...providerDetails.haulersChannel,
+            error: rush ?? 'Not available.'
+        });
+    } else {
+        result.push({
+            reward: rush,
+            daysToComplete: 1,
+            daysExpiration: 7,
+            rushDurationHours: 24,
+            ...providerDetails.haulersChannel,
+        });
+    }
+    if (typeof standard === 'string' || rush == null) {
+        result.push({
+            ...providerDetails.haulersChannel,
+            error: rush ?? 'Not available.'
+        });
+    } else {
+        result.push({
+            reward: standard,
+            daysToComplete: 3,
+            daysExpiration: 7,
+            ...providerDetails.haulersChannel,
+        });
+    }
+    return result;
+}
+
+
+function haulersChannelCalc(volume: number, jumps: number, collateral: number, isRush: boolean, isHighsecOnly: boolean) {
+    if (!volume || !jumps || !collateral) {
+        return "Missing parameter.";
+    }
+
+    let base = 1e6;
+    let add = 0;
+    let multiplier = 1;
+    if (volume <= 12e3) {
+        multiplier *= 1;
+    } else if (volume <= 60e3) {
+        multiplier *= 1;
+    }
+    if (volume > 62500 && collateral < 1e9) {
+        collateral = (3e9 + collateral) / 4;
+    }//low freighter collat pays more
+    if (volume <= 60000 && volume > 12000 && collateral < 1e9) {
+        collateral = (1e9 + collateral) / 2;
+    }//low DST collat pays more
+    if (volume <= 12000 && collateral < 1e9) {
+        collateral = (100e6 + collateral) / 1.1;
+    }//low BR/t1 collat pays more
+
+    if (jumps < 1) {
+        jumps = 1;
+    }//same system counts as 1 jump
+    if (jumps < 5) {//low jumps pay more.
+        jumps = (5 + jumps) * 0.5;
+    }
+    /*
+    if (collat >1e9 && volume <= 60e3){//progressive rebate for very high collats
+        mult /= Math.max(1.0,Math.log( collat/1e8)/Math.log(10));
+    }
+    */
+    if (collateral > 3e9 && volume > 60e3) {
+        multiplier *= Math.max(1.0, Math.log(collateral / 15e7) / Math.log(15));
+    }
+
+    if (volume > 1050e3) {
+        add += 250e3;
+        if (collateral > 2e9) {
+            add += 200e3;
+        }
+    } else if (volume > 880e3) {
+        if (collateral > 1.5e9) {
+            add += 100e3;
+        }
+        if (collateral > 2.5e9) {
+            add += 100e3;
+        }
+        if (collateral > 3e9) {
+            add += 200e3;
+        }
+    } else if (volume > 750e3) {
+        if (collateral > 2.5e9) {
+            add += 100e3;
+        }
+        if (collateral > 3e9) {
+            add += 200e3;
+        }
+    } else if (volume > 500e3) {
+        if (collateral > 2.0e9) {
+            add += 100e3;
+        }
+        if (collateral > 3.5e9) {
+            add += 100e3;
+        }
+    }
+
+    if (isRush) {
+        if (collateral > 2e9) {
+            multiplier *= 2.0 * Math.max(1.0, Math.log(collateral / 1e8) / Math.log(20));
+        } else {
+            multiplier *= 2.0;
+        }
+        if (!isHighsecOnly) {
+            multiplier *= 2;
+        }
+    }
+    if (!isHighsecOnly) {
+        multiplier *= 2;
+        //Non JF lowsec pays double.
+    }
+    if (isHighsecOnly || volume <= 62500) {//highsec or non JF lowsec
+        return ((multiplier * base * collateral / 1e9) + add) * jumps;
+    } else if (!isHighsecOnly && volume > 386e3) {
+        return "Does not fit";
+    } else {//null, JF
+        base = 60e6;
+        if (volume < 100) {
+            multiplier = 0.25;
+        } else if (volume <= 12e3) {
+            multiplier = 0.5;
+        } else if (volume <= 60e3) {
+            multiplier = 0.75;
+        } else if (volume <= 340e3) {
+            multiplier = 1;
+        } else {
+            multiplier = 4;
+        }
+        if (isRush) {
+            multiplier *= 2;
+        }
+        return (multiplier * base * (Math.max(1.0, jumps / 7)) + collateral * 0.01);
+    }
+}
