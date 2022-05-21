@@ -224,6 +224,12 @@ function getPushXVolumeBracket(volume: number) {
     }
 }
 
+function getPushXCollateralBracket(collateral: number) {
+    const base = Math.floor(collateral / 500_000_000);
+    const anotherOne = collateral % 500_000_000 > 0 ? 1 : 0;
+    return (base + anotherOne) * 500_000_000;
+}
+
 async function getPushX(params: RouteParameters): Promise<ProviderResult> {
     if (params.volume > 1_126_500) {
         return {
@@ -240,8 +246,10 @@ async function getPushX(params: RouteParameters): Promise<ProviderResult> {
 
     // To optimize the API usage, we round to volume brackets
     const volumeBracket = getPushXVolumeBracket(params.volume);
+    // To optimize the API usage, we round collateral up in 500m steps. That seems to roughly match the collateral charge increases
+    const collateralBracket = getPushXCollateralBracket(params.collateral);
 
-    const routeKey = getRouteKey('push', {...params, volume: volumeBracket});
+    const routeKey = getRouteKey('push', {...params, volume: volumeBracket, collateral: collateralBracket});
     const existingRecord = await data.get(routeKey) as any;
     if (existingRecord) {
         return returnExistingRecord(existingRecord);
@@ -260,7 +268,7 @@ async function getPushX(params: RouteParameters): Promise<ProviderResult> {
         const apiRateKey = `apirate:push:${Math.ceil(new Date().getTime() / 1_000)}`;
         await data.set(apiRateKey, {date: new Date().toISOString()}, {ttl: 600});
 
-        const response = (await axios.get(`https://api.pushx.net/api/quote/json/?startSystemName=${params.origin}&endSystemName=${params.destination}&volume=${volumeBracket}&collateral=${params.collateral}&apiClient=hauling-advisor`)).data as any;
+        const response = (await axios.get(`https://api.pushx.net/api/quote/json/?startSystemName=${params.origin}&endSystemName=${params.destination}&volume=${volumeBracket}&collateral=${collateralBracket}&apiClient=hauling-advisor`)).data as any;
         let result: RouteResult[] | RouteError;
         if (response.PriceError) {
             result = {
