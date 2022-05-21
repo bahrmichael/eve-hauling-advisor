@@ -41,6 +41,7 @@ jobs:
 #          CYPRESS_BASE_URL: 'https://polished-silence-swjqe.cloud.serverless.com'
   production-deploy:
 #    needs: preview-e2e
+    needs: preview-deploy
     name: Deploy Production
     runs-on: ubuntu-latest
     env:
