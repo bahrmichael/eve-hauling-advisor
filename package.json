@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "start": "cloud",
-    "test": "cloud test"
+    "test": "cloud test",
+    "deploy:preview": "cloud deploy preview",
+    "deploy:production": "cloud deploy production"
   },
   "devDependencies": {
-    "@serverless/cloud": "^2.0.0",
+    "@serverless/cloud": "^2.10.3",
     "@types/jest": "^26.0.24"
   },
   "serverless": {

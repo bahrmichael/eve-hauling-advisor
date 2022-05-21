@@ -18,7 +18,7 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: (cd frontend && yarn install --frozen-lockfile && yarn cloud)
 #      - run: npx cloud test
-      - run: npx cloud deploy preview
+      - run: yarn deploy:preview
   preview-e2e:
     needs: preview-deploy
     name: E2E Tests Preview
@@ -51,7 +51,7 @@ jobs:
         with:
           node-version: 16
       - run: yarn install --frozen-lockfile
-      - run: npx cloud promote preview production
+      - run: yarn deploy:production
   production-e2e:
     needs: production-deploy
     name: E2E Tests Prod
