@@ -293,7 +293,7 @@ async function getPushX(params: RouteParameters): Promise<ProviderResult> {
                 ...providerDetails.push,
             }];
         }
-        await data.set(routeKey, result, {ttl: Math.floor(3 * Math.random() * DAY) + 7 * DAY});
+        await data.set(routeKey, result, {ttl: Math.floor(10 * Math.random() * DAY) + 30 * DAY});
         return result;
     } catch (e) {
         console.warn(e);
