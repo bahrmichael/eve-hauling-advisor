@@ -40,7 +40,7 @@ jobs:
 #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #          CYPRESS_BASE_URL: 'https://polished-silence-swjqe.cloud.serverless.com'
   production-deploy:
-    needs: preview-e2e
+#    needs: preview-e2e
     name: Deploy Production
     runs-on: ubuntu-latest
     env:
