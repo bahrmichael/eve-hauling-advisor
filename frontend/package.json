@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "export": "next export",
-    "cloud": "yarn build && yarn export && rm -Rf ../static && cp -Rf out ../static"
+    "cloud": "yarn build && yarn export && rm -Rf ../static && cp -Rf out ../static",
+    "deploy:preview": "cloud deploy preview",
+    "deploy:production": "cloud deploy production"
   },
   "dependencies": {
     "next": "11.1.2",
@@ -16,6 +18,7 @@
     "react-dom": "17.0.2"
   },
   "devDependencies": {
+    "@serverless/cloud": "^2.10.3",
     "@types/react": "17.0.30",
     "autoprefixer": "^10.3.7",
     "eslint": "^8.0.1",
