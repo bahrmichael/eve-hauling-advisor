@@ -52,7 +52,7 @@ jobs:
         with:
           node-version: 16
       - run: yarn install --frozen-lockfile
-      - run: yarn deploy:production
+      - run: yarn promote:production
 #  production-e2e:
 #    needs: production-deploy
 #    name: E2E Tests Prod

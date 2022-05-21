@@ -7,7 +7,7 @@
     "start": "cloud",
     "test": "cloud test",
     "deploy:preview": "cloud deploy preview",
-    "deploy:production": "cloud deploy production"
+    "promote:production": "cloud promote preview production"
   },
   "devDependencies": {
     "@serverless/cloud": "^2.10.3",
