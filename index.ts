@@ -208,6 +208,22 @@ function returnExistingRecord(existingRecord) {
     }
 }
 
+function getPushXVolumeBracket(volume: number) {
+    if (volume <= 12_500) {
+        return 12_500;
+    } else if (volume <= 62_500) {
+        return 62_500;
+    } else if (volume <= 337_500) {
+        return 337_500;
+    } else if (volume <= 360_000) {
+        return 360_000;
+    } else if (volume <= 848_000) {
+        return 848_000;
+    } else {
+        return 1_126_500;
+    }
+}
+
 async function getPushX(params: RouteParameters): Promise<ProviderResult> {
     if (params.volume > 1_126_500) {
         return {
@@ -222,7 +238,10 @@ async function getPushX(params: RouteParameters): Promise<ProviderResult> {
         }
     }
 
-    const routeKey = getRouteKey('push', params);
+    // To optimize the API usage, we round to volume brackets
+    const volumeBracket = getPushXVolumeBracket(params.volume);
+
+    const routeKey = getRouteKey('push', {...params, volume: volumeBracket});
     const existingRecord = await data.get(routeKey) as any;
     if (existingRecord) {
         return returnExistingRecord(existingRecord);
@@ -241,7 +260,7 @@ async function getPushX(params: RouteParameters): Promise<ProviderResult> {
         const apiRateKey = `apirate:push:${Math.ceil(new Date().getTime() / 1_000)}`;
         await data.set(apiRateKey, {date: new Date().toISOString()}, {ttl: 600});
 
-        const response = (await axios.get(`https://api.pushx.net/api/quote/json/?startSystemName=${params.origin}&endSystemName=${params.destination}&volume=${params.volume}&collateral=${params.collateral}&apiClient=hauling-advisor`)).data as any;
+        const response = (await axios.get(`https://api.pushx.net/api/quote/json/?startSystemName=${params.origin}&endSystemName=${params.destination}&volume=${volumeBracket}&collateral=${params.collateral}&apiClient=hauling-advisor`)).data as any;
         let result: RouteResult[] | RouteError;
         if (response.PriceError) {
             result = {
@@ -266,7 +285,7 @@ async function getPushX(params: RouteParameters): Promise<ProviderResult> {
                 ...providerDetails.push,
             }];
         }
-        await data.set(routeKey, result, {ttl: Math.floor(Math.random() * HALF_DAY) + HALF_DAY});
+        await data.set(routeKey, result, {ttl: Math.floor(3 * Math.random() * DAY) + 7 * DAY});
         return result;
     } catch (e) {
         console.warn(e);
